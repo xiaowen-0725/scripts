@@ -13,7 +13,7 @@ curl -fsSL https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_co
 **Windows PowerShell**（以管理员身份运行）
 
 ```powershell
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-Expression (Invoke-RestMethod -UseBasicParsing https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $f="$env:TEMP\claude_code_env.ps1"; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1' -OutFile $f -UseBasicParsing; & $f
 ```
 
 ## 脚本会做什么

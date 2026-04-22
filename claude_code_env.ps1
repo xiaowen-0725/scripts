@@ -139,17 +139,24 @@ function Check-NodeJS {
 function Install-ClaudeCode {
     $claudeExe = Get-Command claude -ErrorAction SilentlyContinue
     if ($null -ne $claudeExe) {
-        $ver = & claude --version
-        Write-Ok "Claude Code is already installed: $ver"
-    } else {
-        Write-Info "Installing Claude Code..."
-        & npm install -g $CLAUDE_PACKAGE
-        if ($LASTEXITCODE -ne 0) {
-            Write-Err "Failed to install claude-code"
-            exit 1
+        try {
+            $ver = & claude --version 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Ok "Claude Code is already installed: $ver"
+                return
+            }
+        } catch {
+            # execution failed, fall through to reinstall
         }
-        Write-Ok "Claude Code installed successfully"
+        Write-Info "Claude Code found but not working properly. Reinstalling..."
     }
+    Write-Info "Installing Claude Code..."
+    & npm install -g $CLAUDE_PACKAGE
+    if ($LASTEXITCODE -ne 0) {
+        Write-Err "Failed to install claude-code"
+        exit 1
+    }
+    Write-Ok "Claude Code installed successfully"
 }
 
 # ========================

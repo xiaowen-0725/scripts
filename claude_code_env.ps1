@@ -157,12 +157,17 @@ function Install-ClaudeCode {
 # ========================
 
 function Configure-ClaudeJson {
-    $content = @{}
-    if (Test-Path $CLAUDE_JSON_FILE) {
-        $content = Get-Content $CLAUDE_JSON_FILE -Raw | ConvertFrom-Json -AsHashtable
-    }
-    $content["hasCompletedOnboarding"] = $true
-    $content | ConvertTo-Json -Depth 10 | Set-Content $CLAUDE_JSON_FILE -Encoding UTF8
+    node --eval "
+        const fs = require('fs');
+        const path = require('path');
+        const filePath = path.join(process.env.USERPROFILE, '.claude.json');
+        let content = {};
+        if (fs.existsSync(filePath)) {
+            content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        }
+        content.hasCompletedOnboarding = true;
+        fs.writeFileSync(filePath, JSON.stringify(content, null, 2), 'utf-8');
+    "
 }
 
 # ========================
@@ -185,21 +190,26 @@ function Configure-Claude {
 
     Ensure-DirExists $CONFIG_DIR
 
-    # 读取已有配置
-    $settings = @{}
-    if (Test-Path $CONFIG_FILE) {
-        $settings = Get-Content $CONFIG_FILE -Raw | ConvertFrom-Json -AsHashtable
-    }
+    $env:CCE_API_KEY = $plainKey
 
-    # 写入新配置
-    $settings["env"] = @{
-        ANTHROPIC_AUTH_TOKEN = $plainKey
-        ANTHROPIC_BASE_URL = $API_BASE_URL
-        API_TIMEOUT_MS = $API_TIMEOUT_MS
-        CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = 1
-    }
+    node --eval "
+        const fs = require('fs');
+        const path = require('path');
+        const filePath = path.join(process.env.USERPROFILE, '.claude', 'settings.json');
+        let content = {};
+        if (fs.existsSync(filePath)) {
+            content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        }
+        content.env = {
+            ANTHROPIC_AUTH_TOKEN: process.env.CCE_API_KEY,
+            ANTHROPIC_BASE_URL: 'https://open.bigmodel.cn/api/anthropic',
+            API_TIMEOUT_MS: '3000000',
+            CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: 1
+        };
+        fs.writeFileSync(filePath, JSON.stringify(content, null, 2), 'utf-8');
+    "
 
-    $settings | ConvertTo-Json -Depth 10 | Set-Content $CONFIG_FILE -Encoding UTF8
+    Remove-Item Env:CCE_API_KEY -ErrorAction SilentlyContinue
     Write-Ok "Claude Code configured successfully"
 }
 

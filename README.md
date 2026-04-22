@@ -13,7 +13,7 @@ curl -fsSL https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_co
 **Windows PowerShell**（以管理员身份运行）
 
 ```powershell
-irm https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1 | iex
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-Expression (Invoke-RestMethod -UseBasicParsing https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1)
 ```
 
 ## 脚本会做什么
@@ -68,7 +68,7 @@ npm config set registry https://registry.npmmirror.com
 
 确保网络能访问 `raw.githubusercontent.com`，或手动安装 nvm 后再运行脚本。
 
-**Q: Windows 提示"无法运行脚本"**
+**Q: Windows 提示"无法运行脚本"或参数为空**
 
 PowerShell 默认禁止运行脚本，使用以下命令临时放开：
 
@@ -77,6 +77,15 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
 然后重新运行一行安装命令。
+
+如果一行命令仍然失败，可以手动下载后执行：
+
+```powershell
+# 下载脚本
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1 -OutFile claude_code_env.ps1 -UseBasicParsing
+# 执行
+.\claude_code_env.ps1
+```
 
 **Q: 如何更换 API Key**
 

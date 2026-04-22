@@ -10,10 +10,10 @@
 curl -fsSL https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.sh | bash
 ```
 
-**Windows PowerShell**（以管理员身份运行）
+**Windows PowerShell**
 
 ```powershell
-irm https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1 -UseBasicParsing | iex
+iex (irm 'https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1' -UseBasicParsing)
 ```
 
 ## 脚本会做什么

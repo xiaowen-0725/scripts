@@ -14,6 +14,7 @@ $CLAUDE_JSON_FILE = Join-Path $env:USERPROFILE ".claude.json"
 $API_BASE_URL = "https://open.bigmodel.cn/api/anthropic"
 $API_KEY_URL = "https://open.bigmodel.cn/usercenter/proj-mgmt/apikeys"
 $API_TIMEOUT_MS = "3000000"
+$SCRIPT_URL = "https://raw.githubusercontent.com/xiaowen-0725/scripts/main/claude_code_env.ps1"
 
 # ========================
 #       工具函数
@@ -52,12 +53,13 @@ function Request-Admin {
 
     if (-not $isAdmin) {
         Write-Info "Requesting administrator privileges..."
-        # irm | iex 模式下没有 PSCommandPath，需要保存脚本到临时文件
         if ($PSCommandPath -and (Test-Path $PSCommandPath)) {
             Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
         } else {
             $tempFile = Join-Path $env:TEMP "claude_code_env.ps1"
-            $MyInvocation.MyCommand.ScriptBlock.ToString() | Set-Content $tempFile -Encoding UTF8
+            Write-Info "Saving script for elevation..."
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri $SCRIPT_URL -OutFile $tempFile -UseBasicParsing
             Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$tempFile`""
         }
         exit 0

@@ -220,14 +220,26 @@ function Configure-Claude {
 Write-Host "Starting Claude Code Environment Setup"
 Write-Ok "Platform: Windows"
 
-Request-Admin
-Check-NodeJS
-Install-ClaudeCode
-Configure-ClaudeJson
-Configure-Claude
+# 检查是否已完成安装
+$alreadyDone = $false
+if ((Get-Command claude -ErrorAction SilentlyContinue) -and (Test-Path $CONFIG_FILE)) {
+    $configContent = Get-Content $CONFIG_FILE -Raw
+    if ($configContent -match "ANTHROPIC_AUTH_TOKEN") {
+        Write-Ok "Claude Code is already installed and configured. Nothing to do."
+        $alreadyDone = $true
+    }
+}
 
-Write-Host ""
-Write-Ok "Installation completed successfully!"
-Write-Host ""
-Write-Host "You can now start using Claude Code with:"
-Write-Host "   claude"
+if (-not $alreadyDone) {
+    Request-Admin
+    Check-NodeJS
+    Install-ClaudeCode
+    Configure-ClaudeJson
+    Configure-Claude
+
+    Write-Host ""
+    Write-Ok "Installation completed successfully!"
+    Write-Host ""
+    Write-Host "You can now start using Claude Code with:"
+    Write-Host "   claude"
+}

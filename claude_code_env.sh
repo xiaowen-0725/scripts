@@ -203,6 +203,13 @@ main() {
     echo "🚀 Starting $SCRIPT_NAME"
 
     check_platform
+
+    # 检查是否已完成安装
+    if command -v claude &>/dev/null && [ -f "$CONFIG_FILE" ] && grep -q "ANTHROPIC_AUTH_TOKEN" "$CONFIG_FILE"; then
+        log_success "Claude Code is already installed and configured. Nothing to do."
+        exit 0
+    fi
+
     check_nodejs
     install_claude_code
     configure_claude_json

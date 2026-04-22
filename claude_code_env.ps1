@@ -185,7 +185,7 @@ function Configure-Claude {
     Write-Info "Configuring Claude Code..."
     Write-Host "   You can get your API key from: $API_KEY_URL"
 
-    $apiKey = Read-Host "Please enter your ZHIPU API key" -AsSecureString
+    $apiKey = Read-Host "Please enter your GLM API key" -AsSecureString
     $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
         [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($apiKey)
     )

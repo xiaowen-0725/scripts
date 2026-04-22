@@ -154,7 +154,7 @@ configure_claude_json() {
 configure_claude() {
     log_info "Configuring Claude Code..."
     echo "   You can get your API key from: $API_KEY_URL"
-    read -s -p "🔑 Please enter your ZHIPU API key: " api_key
+    read -s -p "🔑 Please enter your GLM API key: " api_key
     echo
 
     if [ -z "$api_key" ]; then

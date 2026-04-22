@@ -1,11 +1,8 @@
-#Requires -RunAsAdministrator
-
 $ErrorActionPreference = "Stop"
 
 # ========================
 #       常量定义
 # ========================
-$SCRIPT_NAME = Split-Path -Leaf $PSCommandPath
 $NODE_MIN_VERSION = 18
 $NODE_INSTALL_VERSION = "22.15.0"
 $NODE_MSI_URL = "https://nodejs.org/dist/v$NODE_INSTALL_VERSION/node-v$NODE_INSTALL_VERSION-x64.msi"
@@ -55,8 +52,27 @@ function Request-Admin {
 
     if (-not $isAdmin) {
         Write-Info "Requesting administrator privileges..."
-        Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        exit
+        # irm | iex 模式下没有文件路径，先将脚本保存到临时文件再提权启动
+        $scriptContent = $MyInvocation.PipelinePosition -eq $null ? "" : ""
+        # 获取当前脚本内容
+        $currentScript = $null
+        try { $currentScript = Get-Content $PSCommandPath -Raw -ErrorAction SilentlyContinue } catch {}
+        if ($currentScript) {
+            Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        } else {
+            # irm | iex 模式：保存到临时文件后提权启动
+            $tempFile = Join-Path $env:TEMP "claude_code_env.ps1"
+            $scriptBlock = $MyInvocation.MyCommand.ScriptBlock
+            if ($scriptBlock) {
+                $scriptBlock.ToString() | Set-Content $tempFile -Encoding UTF8
+                Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$tempFile`""
+            } else {
+                Write-Err "Please run PowerShell as Administrator and try again."
+                Write-Err "Right-click PowerShell -> 'Run as Administrator'"
+                exit 1
+            }
+        }
+        exit 0
     }
     Write-Ok "Running with administrator privileges"
 }
@@ -68,6 +84,7 @@ function Request-Admin {
 function Install-NodeJS {
     Write-Info "Downloading Node.js v$NODE_INSTALL_VERSION..."
     try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $NODE_MSI_URL -OutFile $NODE_MSI_PATH -UseBasicParsing
     } catch {
         Write-Err "Failed to download Node.js: $_"
@@ -200,21 +217,17 @@ function Configure-Claude {
 #        主流程
 # ========================
 
-function Main {
-    Write-Host "Starting $SCRIPT_NAME"
-    Write-Ok "Platform: Windows"
+Write-Host "Starting Claude Code Environment Setup"
+Write-Ok "Platform: Windows"
 
-    Request-Admin
-    Check-NodeJS
-    Install-ClaudeCode
-    Configure-ClaudeJson
-    Configure-Claude
+Request-Admin
+Check-NodeJS
+Install-ClaudeCode
+Configure-ClaudeJson
+Configure-Claude
 
-    Write-Host ""
-    Write-Ok "Installation completed successfully!"
-    Write-Host ""
-    Write-Host "You can now start using Claude Code with:"
-    Write-Host "   claude"
-}
-
-Main
+Write-Host ""
+Write-Ok "Installation completed successfully!"
+Write-Host ""
+Write-Host "You can now start using Claude Code with:"
+Write-Host "   claude"

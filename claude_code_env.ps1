@@ -52,25 +52,13 @@ function Request-Admin {
 
     if (-not $isAdmin) {
         Write-Info "Requesting administrator privileges..."
-        # irm | iex 模式下没有文件路径，先将脚本保存到临时文件再提权启动
-        $scriptContent = $MyInvocation.PipelinePosition -eq $null ? "" : ""
-        # 获取当前脚本内容
-        $currentScript = $null
-        try { $currentScript = Get-Content $PSCommandPath -Raw -ErrorAction SilentlyContinue } catch {}
-        if ($currentScript) {
+        # irm | iex 模式下没有 PSCommandPath，需要保存脚本到临时文件
+        if ($PSCommandPath -and (Test-Path $PSCommandPath)) {
             Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
         } else {
-            # irm | iex 模式：保存到临时文件后提权启动
             $tempFile = Join-Path $env:TEMP "claude_code_env.ps1"
-            $scriptBlock = $MyInvocation.MyCommand.ScriptBlock
-            if ($scriptBlock) {
-                $scriptBlock.ToString() | Set-Content $tempFile -Encoding UTF8
-                Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$tempFile`""
-            } else {
-                Write-Err "Please run PowerShell as Administrator and try again."
-                Write-Err "Right-click PowerShell -> 'Run as Administrator'"
-                exit 1
-            }
+            $MyInvocation.MyCommand.ScriptBlock.ToString() | Set-Content $tempFile -Encoding UTF8
+            Start-Process PowerShell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$tempFile`""
         }
         exit 0
     }
